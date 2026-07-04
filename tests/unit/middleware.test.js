@@ -56,6 +56,15 @@ describe('AuthMiddleware', () => {
 
         expect(next).toHaveBeenCalledWith(expect.any(Error));
     });
+
+    it('devrait lancer une erreur si JWT_SECRET n\'est pas défini', () => {
+        delete process.env.JWT_SECRET;
+        const req = { headers: { authorization: 'Bearer valid-token' } };
+        const next = makeNext();
+        authMiddleware(req, makeRes(), next);
+
+        expect(next).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('JWT_SECRET') }));
+    });
 });
 
 describe('ErrorMiddleware', () => {
@@ -90,6 +99,27 @@ describe('ErrorMiddleware', () => {
         errorHandler(err, {}, res, makeNext());
 
         expect(res.status).toHaveBeenCalledWith(401);
+    });
+
+    it('devrait retourner 401 pour un token expiré', async () => {
+        const { errorHandler } = await import('../../src/middleware/error.middleware.js');
+        const err = new Error('token expired');
+        err.name = 'TokenExpiredError';
+        const res = makeRes();
+        errorHandler(err, {}, res, makeNext());
+
+        expect(res.status).toHaveBeenCalledWith(401);
+    });
+
+    it('devrait utiliser 400 par défaut si MetierException n\'a pas de statusCode', async () => {
+        const { errorHandler } = await import('../../src/middleware/error.middleware.js');
+        const err = new Error('Test err');
+        err.name = 'MetierException';
+        err.statusCode = undefined; // Force undefined pour tester la fallback
+        const res = makeRes();
+        errorHandler(err, {}, res, makeNext());
+
+        expect(res.status).toHaveBeenCalledWith(400);
     });
 
     it('devrait retourner 500 pour une erreur interne inconnue', async () => {

@@ -61,4 +61,16 @@ describe('UtilisateurService', () => {
                 .rejects.toThrow("Email ou mot de passe incorrect.");
         });
     });
+
+    describe('genererToken', () => {
+        it('devrait générer un token JWT', () => {
+            const token = utilisateurService.genererToken({ id: 1, email: 't@t.com' });
+            expect(typeof token).toBe('string');
+        });
+
+        it('devrait lancer une erreur si JWT_SECRET est absent', () => {
+            delete process.env.JWT_SECRET;
+            expect(() => utilisateurService.genererToken({ id: 1 })).toThrow("JWT_SECRET");
+        });
+    });
 });

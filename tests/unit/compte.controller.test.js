@@ -68,6 +68,14 @@ describe('CompteController', () => {
             await createCompte(req, res, makeNext());
             expect(compteService.creerCompte).toHaveBeenCalledWith(10, 'COURANT', 0);
         });
+
+        it('devrait appeler next() en cas d\'erreur', async () => {
+            const error = new Error('Creation failed');
+            compteService.creerCompte.mockRejectedValue(error);
+            const next = makeNext();
+            await createCompte(makeReq(), makeRes(), next);
+            expect(next).toHaveBeenCalledWith(error);
+        });
     });
 
     describe('getCompte', () => {
@@ -81,6 +89,14 @@ describe('CompteController', () => {
 
             expect(compteService.consulterCompte).toHaveBeenCalledWith(1, 10);
             expect(res.json).toHaveBeenCalledWith(compte);
+        });
+
+        it('devrait appeler next() en cas d\'erreur', async () => {
+            const error = new Error('Not found');
+            compteService.consulterCompte.mockRejectedValue(error);
+            const next = makeNext();
+            await getCompte(makeReq({ id: '1' }), makeRes(), next);
+            expect(next).toHaveBeenCalledWith(error);
         });
     });
 
@@ -96,6 +112,14 @@ describe('CompteController', () => {
             expect(compteService.obtenirHistorique).toHaveBeenCalledWith(1, 10);
             expect(res.json).toHaveBeenCalledWith(historique);
         });
+
+        it('devrait appeler next() en cas d\'erreur', async () => {
+            const error = new Error('Not found');
+            compteService.obtenirHistorique.mockRejectedValue(error);
+            const next = makeNext();
+            await getHistorique(makeReq({ id: '1' }), makeRes(), next);
+            expect(next).toHaveBeenCalledWith(error);
+        });
     });
 
     describe('depot', () => {
@@ -109,6 +133,14 @@ describe('CompteController', () => {
 
             expect(compteService.crediterCompte).toHaveBeenCalledWith(1, 100, 10);
             expect(res.json).toHaveBeenCalledWith(compteMaj);
+        });
+
+        it('devrait appeler next() en cas d\'erreur', async () => {
+            const error = new Error('Invalid');
+            compteService.crediterCompte.mockRejectedValue(error);
+            const next = makeNext();
+            await depot(makeReq({ id: '1' }, { montant: 100 }), makeRes(), next);
+            expect(next).toHaveBeenCalledWith(error);
         });
     });
 
@@ -124,6 +156,14 @@ describe('CompteController', () => {
             expect(compteService.debiterCompte).toHaveBeenCalledWith(1, 100, 10);
             expect(res.json).toHaveBeenCalledWith(compteMaj);
         });
+
+        it('devrait appeler next() en cas d\'erreur', async () => {
+            const error = new Error('Insuffisant');
+            compteService.debiterCompte.mockRejectedValue(error);
+            const next = makeNext();
+            await retrait(makeReq({ id: '1' }, { montant: 100 }), makeRes(), next);
+            expect(next).toHaveBeenCalledWith(error);
+        });
     });
 
     describe('virement', () => {
@@ -136,6 +176,14 @@ describe('CompteController', () => {
 
             expect(compteService.virer).toHaveBeenCalledWith(1, '2', 200, 10);
             expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: expect.any(String) }));
+        });
+
+        it('devrait appeler next() en cas d\'erreur', async () => {
+            const error = new Error('Insuffisant');
+            compteService.virer.mockRejectedValue(error);
+            const next = makeNext();
+            await virement(makeReq({ id: '1' }, { compteDestinationId: '2', montant: 200 }), makeRes(), next);
+            expect(next).toHaveBeenCalledWith(error);
         });
     });
 });

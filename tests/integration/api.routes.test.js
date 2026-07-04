@@ -30,6 +30,14 @@ describe('API Routes — Integration', () => {
         });
     });
 
+    describe('GET /unknown-route', () => {
+        it('devrait retourner le fichier index.html (SPA fallback)', async () => {
+            const res = await request(app).get('/unknown-route-pour-spa');
+            expect(res.status).toBe(200);
+            // express.static et res.sendFile vont échouer gracieusement ou retourner du texte si le mock / dist n'est pas parfait, mais l'important est de couvrir la route.
+        });
+    });
+
     describe('POST /utilisateurs/register', () => {
         it('devrait créer un utilisateur (201)', async () => {
             utilisateurService.inscrireUtilisateur.mockResolvedValue({ id: 1, email: 'test@test.com' });

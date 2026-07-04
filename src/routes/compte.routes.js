@@ -12,9 +12,6 @@ import { authMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Toutes les routes de compte nécessitent d'être authentifié
-router.use(authMiddleware);
-
 /**
  * @swagger
  * /mes-comptes:
@@ -27,7 +24,7 @@ router.use(authMiddleware);
  *       200:
  *         description: Liste des comptes
  */
-router.get('/mes-comptes', getMesComptes);
+router.get('/mes-comptes', authMiddleware, getMesComptes);
 
 /**
  * @swagger
@@ -56,7 +53,7 @@ router.get('/mes-comptes', getMesComptes);
  *       201:
  *         description: Compte créé
  */
-router.post('/comptes', createCompte);
+router.post('/comptes', authMiddleware, createCompte);
 
 /**
  * @swagger
@@ -77,7 +74,7 @@ router.post('/comptes', createCompte);
  *       404:
  *         description: Compte non trouvé ou accès interdit
  */
-router.get('/comptes/:id', getCompte);
+router.get('/comptes/:id', authMiddleware, getCompte);
 
 /**
  * @swagger
@@ -96,7 +93,7 @@ router.get('/comptes/:id', getCompte);
  *       200:
  *         description: Liste des transactions
  */
-router.get('/comptes/:id/historique', getHistorique);
+router.get('/comptes/:id/historique', authMiddleware, getHistorique);
 
 /**
  * @swagger
@@ -125,7 +122,7 @@ router.get('/comptes/:id/historique', getHistorique);
  *       200:
  *         description: Dépôt effectué
  */
-router.post('/comptes/:id/depot', depot);
+router.post('/comptes/:id/depot', authMiddleware, depot);
 
 /**
  * @swagger
@@ -156,7 +153,7 @@ router.post('/comptes/:id/depot', depot);
  *       400:
  *         description: Solde insuffisant
  */
-router.post('/comptes/:id/retrait', retrait);
+router.post('/comptes/:id/retrait', authMiddleware, retrait);
 
 /**
  * @swagger
@@ -191,6 +188,6 @@ router.post('/comptes/:id/retrait', retrait);
  *       200:
  *         description: Virement effectué
  */
-router.post('/comptes/:id/virement', virement);
+router.post('/comptes/:id/virement', authMiddleware, virement);
 
 export default router;

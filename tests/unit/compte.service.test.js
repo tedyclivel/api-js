@@ -44,6 +44,17 @@ describe('CompteService', () => {
         });
     });
 
+    describe('listerComptes', () => {
+        it('devrait retourner la liste des comptes de l\'utilisateur', async () => {
+            const comptes = [mockCompte];
+            compteRepository.trouverParUtilisateurId.mockResolvedValue(comptes);
+            
+            const result = await compteService.listerComptes(10);
+            expect(result).toEqual(comptes);
+            expect(compteRepository.trouverParUtilisateurId).toHaveBeenCalledWith(10);
+        });
+    });
+
     describe('crediterCompte', () => {
         it('devrait augmenter le solde du compte', async () => {
             compteRepository.trouverParId.mockResolvedValue(mockCompte);
@@ -80,6 +91,11 @@ describe('CompteService', () => {
             compteRepository.trouverParId.mockResolvedValue({ ...mockCompte, solde: 50 });
             await expect(compteService.debiterCompte(1, 100, 10)).rejects.toThrow('Solde insuffisant');
         });
+
+        it('devrait refuser un montant négatif ou zéro', async () => {
+            await expect(compteService.debiterCompte(1, -50, 10)).rejects.toThrow('strictement positif');
+            await expect(compteService.debiterCompte(1, 0, 10)).rejects.toThrow('strictement positif');
+        });
     });
 
     describe('virer', () => {
@@ -113,6 +129,16 @@ describe('CompteService', () => {
                 .mockResolvedValueOnce(null);
             await expect(compteService.virer(1, 99, 100, 10)).rejects.toThrow('non trouvé');
         });
+
+        it('devrait refuser si solde insuffisant', async () => {
+            compteRepository.trouverParId.mockResolvedValueOnce({ ...mockCompte, solde: 50 });
+            await expect(compteService.virer(1, 2, 100, 10)).rejects.toThrow('Solde insuffisant');
+        });
+
+        it('devrait refuser un montant négatif ou zéro', async () => {
+            await expect(compteService.virer(1, 2, -50, 10)).rejects.toThrow('strictement positif');
+            await expect(compteService.virer(1, 2, 0, 10)).rejects.toThrow('strictement positif');
+        });
     });
 
     describe('consulterCompte', () => {
@@ -130,6 +156,17 @@ describe('CompteService', () => {
         it('devrait refuser si le compte n\'existe pas', async () => {
             compteRepository.trouverParId.mockResolvedValue(null);
             await expect(compteService.consulterCompte(999, 10)).rejects.toThrow('non trouvé');
+        });
+    });
+
+    describe('obtenirHistorique', () => {
+        it('devrait retourner l\'historique si l\'utilisateur est propriétaire', async () => {
+            compteRepository.trouverParId.mockResolvedValue(mockCompte);
+            historiqueRepository.trouverParCompteId.mockResolvedValue([{ id: 1 }]);
+            
+            const hist = await compteService.obtenirHistorique(1, 10);
+            expect(hist).toHaveLength(1);
+            expect(historiqueRepository.trouverParCompteId).toHaveBeenCalledWith(1);
         });
     });
 });
