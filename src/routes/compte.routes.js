@@ -34,7 +34,7 @@ router.get('/mes-comptes', getMesComptes);
  * /comptes:
  *   post:
  *     summary: Ouvrir un nouveau compte
- *     description: Crée un nouveau compte (ex: EPARGNE) pour l'utilisateur connecté.
+ *     description: "Crée un nouveau compte (ex: EPARGNE) pour l'utilisateur connecté."
  *     security:
  *       - bearerAuth: []
  *     requestBody:

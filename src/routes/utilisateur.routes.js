@@ -36,7 +36,7 @@ const router = Router();
  *       201:
  *         description: Utilisateur créé avec succès
  *       400:
- *         description: Erreur de validation (ex: email déjà pris)
+ *         description: "Erreur de validation (ex: email déjà pris)"
  */
 router.post('/utilisateurs/register', register);
 
