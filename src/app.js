@@ -12,6 +12,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+import { setupSwagger } from './swagger.js';
+setupSwagger(app);
+
 // Routes principales
 app.get('/', (req, res) => res.json({ status: 'API NeoBanque is running' }));
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
