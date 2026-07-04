@@ -11,10 +11,6 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000',
-        description: 'Serveur de développement local',
-      },
-      {
         url: 'https://api-js-78oe.onrender.com',
         description: 'Serveur de production (Render)',
       },
