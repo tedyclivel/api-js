@@ -5,7 +5,7 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'NeoBanque API Node.js',
+      title: 'TEMA API Node.js',
       version: '1.0.0',
       description: 'API bancaire développée en Node.js/Express, reproduisant le comportement de l\'API Java Spring Boot.',
     },

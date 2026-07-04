@@ -13,9 +13,11 @@ export const getMesComptes = async (req, res, next) => {
 export const createCompte = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        const { typeCompte } = req.body;
+        // Le frontend envoie type_compte (snake_case) avec valeur en MAJUSCULES
+        const { type_compte, solde_initial } = req.body;
+        const typeNormalized = (type_compte || 'COURANT').toUpperCase();
         
-        const compte = await compteService.creerCompte(userId, typeCompte || 'epargne');
+        const compte = await compteService.creerCompte(userId, typeNormalized, solde_initial || 0);
         res.status(201).json(compte);
     } catch (err) {
         next(err);

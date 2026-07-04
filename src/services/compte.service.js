@@ -3,12 +3,24 @@ import historiqueRepository from '../repositories/historique.repository.js';
 import { MetierException } from '../errors/MetierException.js';
 
 export class CompteService {
-    async creerCompte(utilisateurId, typeCompte) {
-        return await compteRepository.sauvegarder({
+    /**
+     * Crée un compte pour un utilisateur avec un solde initial optionnel.
+     */
+    async creerCompte(utilisateurId, typeCompte, soldeInitial = 0) {
+        const type = (typeCompte || 'COURANT').toUpperCase();
+        
+        const compte = await compteRepository.sauvegarder({
             utilisateur_id: utilisateurId,
-            type_compte: typeCompte,
+            type_compte: type,
             solde: 0.0
         });
+
+        // Si un solde initial est fourni, on effectue un dépôt
+        if (soldeInitial && soldeInitial > 0) {
+            return await this.crediterCompte(compte.id, soldeInitial, utilisateurId);
+        }
+
+        return compte;
     }
 
     async listerComptes(utilisateurId) {
@@ -27,7 +39,7 @@ export class CompteService {
     }
 
     async crediterCompte(id, montant, utilisateurId) {
-        if (montant <= 0) {
+        if (!montant || montant <= 0) {
             throw new MetierException("Le montant doit être strictement positif.");
         }
         
@@ -36,9 +48,10 @@ export class CompteService {
         
         const compteMaj = await compteRepository.mettreAJourSolde(id, nouveauSolde);
         
+        // Enregistrement dans l'historique — champ "type_transaction" aligné avec la DB
         await historiqueRepository.sauvegarder({
             compte_id: id,
-            type: 'DEPOT',
+            type_transaction: 'DEPOT',
             montant: montant
         });
 
@@ -46,7 +59,7 @@ export class CompteService {
     }
 
     async debiterCompte(id, montant, utilisateurId) {
-        if (montant <= 0) {
+        if (!montant || montant <= 0) {
             throw new MetierException("Le montant doit être strictement positif.");
         }
         
@@ -60,7 +73,7 @@ export class CompteService {
 
         await historiqueRepository.sauvegarder({
             compte_id: id,
-            type: 'RETRAIT',
+            type_transaction: 'RETRAIT',
             montant: montant
         });
 
@@ -68,45 +81,50 @@ export class CompteService {
     }
 
     async virer(sourceId, destinationId, montant, utilisateurId) {
-        if (sourceId === destinationId) {
+        const srcId = parseInt(sourceId);
+        const destId = parseInt(destinationId);
+
+        if (srcId === destId) {
             throw new MetierException("Le compte source et le compte de destination doivent être différents.");
         }
-        if (montant <= 0) {
+        if (!montant || montant <= 0) {
             throw new MetierException("Le montant doit être strictement positif.");
         }
 
-        // Vérification du compte source
-        const compteSource = await this.consulterCompte(sourceId, utilisateurId);
+        // Vérification du compte source (appartenance + solde)
+        const compteSource = await this.consulterCompte(srcId, utilisateurId);
         
         if (parseFloat(compteSource.solde) < parseFloat(montant)) {
             throw new MetierException("Solde insuffisant.");
         }
 
-        // Vérification du compte destination
-        const compteDestination = await compteRepository.trouverParId(destinationId);
+        // Vérification du compte destination (existence uniquement)
+        const compteDestination = await compteRepository.trouverParId(destId);
         if (!compteDestination) {
-            throw new MetierException(`Compte de destination non trouvé avec l'id : ${destinationId}`, 404);
+            throw new MetierException(`Compte de destination non trouvé avec l'id : ${destId}`, 404);
         }
 
-        // Exécution du virement (sans transaction forte pour l'instant via Supabase JS de base)
+        // Exécution du virement
         const nouveauSoldeSource = parseFloat(compteSource.solde) - parseFloat(montant);
         const nouveauSoldeDest = parseFloat(compteDestination.solde) + parseFloat(montant);
 
-        await compteRepository.mettreAJourSolde(sourceId, nouveauSoldeSource);
-        await compteRepository.mettreAJourSolde(destinationId, nouveauSoldeDest);
+        await compteRepository.mettreAJourSolde(srcId, nouveauSoldeSource);
+        await compteRepository.mettreAJourSolde(destId, nouveauSoldeDest);
 
+        // Historique pour le compte source
         await historiqueRepository.sauvegarder({
-            compte_id: sourceId,
-            type: 'VIREMENT_ENVOYE',
+            compte_id: srcId,
+            type_transaction: 'VIREMENT',
             montant: montant,
-            autre_partie_id: destinationId
+            autre_partie_id: destId
         });
 
+        // Historique pour le compte destination
         await historiqueRepository.sauvegarder({
-            compte_id: destinationId,
-            type: 'VIREMENT_RECU',
+            compte_id: destId,
+            type_transaction: 'VIREMENT',
             montant: montant,
-            autre_partie_id: sourceId
+            autre_partie_id: srcId
         });
     }
 

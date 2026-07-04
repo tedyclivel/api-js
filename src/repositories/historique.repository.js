@@ -6,7 +6,7 @@ export class HistoriqueRepository {
             .from('historique')
             .insert([{
                 compte_id: historique.compte_id,
-                type: historique.type,
+                type_transaction: historique.type_transaction,  // aligné avec le schema SQL
                 montant: historique.montant,
                 autre_partie_id: historique.autre_partie_id || null
             }])
@@ -22,7 +22,7 @@ export class HistoriqueRepository {
             .from('historique')
             .select('*')
             .eq('compte_id', compteId)
-            .order('date', { ascending: false });
+            .order('date_transaction', { ascending: false }); // colonne correcte du schema
 
         if (error) throw new Error(`Erreur lors de la recherche de l'historique: ${error.message}`);
         return data;

@@ -1,4 +1,5 @@
 -- supabase/schema.sql
+-- Script de création des tables pour l'application TEMA
 
 -- 1. Table `utilisateur`
 CREATE TABLE public.utilisateur (
@@ -15,8 +16,8 @@ CREATE TABLE public.utilisateur (
 CREATE TABLE public.compte (
     id SERIAL PRIMARY KEY,
     utilisateur_id INT NOT NULL REFERENCES public.utilisateur(id) ON DELETE CASCADE,
-    type_compte VARCHAR(50) NOT NULL,
-    solde DECIMAL(15, 2) NOT NULL DEFAULT 0.0,
+    type_compte VARCHAR(50) NOT NULL CHECK (type_compte IN ('COURANT', 'EPARGNE')),
+    solde DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
     date_creation TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -24,11 +25,11 @@ CREATE TABLE public.compte (
 CREATE TABLE public.historique (
     id SERIAL PRIMARY KEY,
     compte_id INT NOT NULL REFERENCES public.compte(id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL, -- 'DEPOT', 'RETRAIT', 'VIREMENT_ENVOYE', 'VIREMENT_RECU'
+    type_transaction VARCHAR(50) NOT NULL CHECK (type_transaction IN ('DEPOT', 'RETRAIT', 'VIREMENT')),
     montant DECIMAL(15, 2) NOT NULL,
-    date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    autre_partie_id INT -- Peut être NULL (si dépôt ou retrait), référence un autre compte si virement
+    date_transaction TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    autre_partie_id INT REFERENCES public.compte(id) ON DELETE SET NULL -- NULL si dépôt ou retrait
 );
 
--- Sécurité Row Level Security (RLS) désactivée pour ce cas simple, car le backend gère la sécurité.
--- Mais vous pouvez l'activer si besoin plus tard.
+-- Note: La sécurité Row Level Security (RLS) est désactivée car le backend
+-- gère lui-même les autorisations via le middleware JWT.

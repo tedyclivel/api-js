@@ -9,7 +9,9 @@
     "dev": "node --watch src/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "vitests:coverage": "vitest run --coverage"
+    "vitests:coverage": "vitest run --coverage",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build": "npm run build:frontend"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.44.4",
